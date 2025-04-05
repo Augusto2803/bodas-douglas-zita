@@ -1,0 +1,44 @@
+services:
+  # Serviço da API FastAPI
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./uploads:/app/uploads  # Mapeamento para pasta local
+    environment:
+      - BASE_DIR=/app/uploads
+    networks:
+      - bodas_network
+
+  # Serviço do frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - bodas_network
+
+  # Serviço do Nginx como proxy reverso
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./uploads:/var/www/uploads  # Mapeamento para pasta local
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - bodas_network
+
+networks:
+  bodas_network:
+    driver: bridge
